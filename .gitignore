@@ -50,6 +50,6 @@ origi.html
 .DS_Store
 Thumbs.db
 
-blog/
+blog-source/
 
 config/config.yaml
