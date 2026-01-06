@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"sync"
 
@@ -133,8 +135,14 @@ func (m *Manager) UploadImagesConcurrently(ctx context.Context, imagePaths []str
 }
 
 // downloadImage 下载图片到临时目录
-func (m *Manager) downloadImage(ctx context.Context, url string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+func (m *Manager) downloadImage(ctx context.Context, imgURL string) (string, error) {
+	// 解析URL以获取干净的扩展名
+	u, err := url.Parse(imgURL)
+	if err != nil {
+		return "", fmt.Errorf("parse url: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", imgURL, nil)
 	if err != nil {
 		return "", err
 	}
@@ -150,11 +158,15 @@ func (m *Manager) downloadImage(ctx context.Context, url string) (string, error)
 	}
 
 	// 生成临时文件名
-	hash := md5.Sum([]byte(url))
-	ext := filepath.Ext(url)
+	// 使用完整的imgURL进行哈希，确保不同参数的图片被视为不同文件
+	hash := md5.Sum([]byte(imgURL))
+
+	// 使用 path.Ext 获取不带查询参数的扩展名
+	ext := path.Ext(u.Path)
 	if ext == "" {
 		ext = ".png"
 	}
+
 	filename := fmt.Sprintf("%x%s", hash, ext)
 	tempPath := filepath.Join(m.cfg.TempDir, filename)
 
