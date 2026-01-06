@@ -17,11 +17,11 @@ import (
 
 // Manager 媒体管理器
 type Manager struct {
-	client      *wechat.Client
+	client       *wechat.Client
 	cacheManager *cache.Manager
-	cfg         *config.ImageConfig
-	tempFiles   []string
-	mutex       sync.Mutex
+	cfg          *config.ImageConfig
+	tempFiles    []string
+	mutex        sync.Mutex
 }
 
 // ImageInfo 图片信息
@@ -38,10 +38,10 @@ func NewManager(client *wechat.Client, cacheManager *cache.Manager, cfg *config.
 	}
 
 	return &Manager{
-		client:      client,
+		client:       client,
 		cacheManager: cacheManager,
-		cfg:         cfg,
-		tempFiles:   make([]string, 0),
+		cfg:          cfg,
+		tempFiles:    make([]string, 0),
 	}, nil
 }
 
@@ -92,7 +92,7 @@ func (m *Manager) UploadImagesConcurrently(ctx context.Context, imagePaths []str
 	results := make(map[string]*ImageInfo)
 	var resultMutex sync.Mutex
 	var wg sync.WaitGroup
-	
+
 	semaphore := make(chan struct{}, maxConcurrent)
 	errChan := make(chan error, len(imagePaths))
 
@@ -100,7 +100,7 @@ func (m *Manager) UploadImagesConcurrently(ctx context.Context, imagePaths []str
 		wg.Add(1)
 		go func(path string) {
 			defer wg.Done()
-			
+
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 

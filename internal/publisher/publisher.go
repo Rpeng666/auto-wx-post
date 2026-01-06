@@ -36,7 +36,7 @@ func NewPublisher(
 	log *logger.Logger,
 ) (*Publisher, error) {
 	mdParser := markdown.NewParser()
-	
+
 	// 尝试加载CSS模板，如果不存在使用默认
 	mdBeautifier, err := markdown.NewBeautifier("./assets")
 	if err != nil {
@@ -75,6 +75,16 @@ func (p *Publisher) PublishArticle(ctx context.Context, filePath string) error {
 		return fmt.Errorf("parse markdown: %w", err)
 	}
 
+	// [新增] 校验解析结果：防止因为文件编码/格式问题导致解析为空但未报错
+	if article.Title == "" && len(article.Content) == 0 {
+		return fmt.Errorf("parsed article is empty. Please check file encoding (use UTF-8 without BOM) and line endings: %s", filePath)
+	}
+	if article.Title == "" {
+		p.log.Warn("Article title is empty, using filename as fallback")
+		filename := filepath.Base(filePath)
+		article.Title = strings.TrimSuffix(filename, filepath.Ext(filename))
+	}
+
 	// 处理封面图片
 	images := article.Images
 	if len(images) == 0 || article.GenCover == "true" {
@@ -103,11 +113,19 @@ func (p *Publisher) PublishArticle(ctx context.Context, filePath string) error {
 
 	// 转换为HTML
 	htmlContent := p.mdParser.ToHTML(article.Content)
-	
+	if len(strings.TrimSpace(htmlContent)) == 0 {
+		return fmt.Errorf("HTML content is empty after conversion")
+	}
+
 	// 美化HTML
 	beautifiedHTML, err := p.mdBeautifier.Beautify(htmlContent)
 	if err != nil {
 		return fmt.Errorf("beautify html: %w", err)
+	}
+
+	// 最终内容检查
+	if len(beautifiedHTML) == 0 {
+		return fmt.Errorf("final content is empty")
 	}
 
 	// 准备文章数据
@@ -161,7 +179,7 @@ func (p *Publisher) PublishArticle(ctx context.Context, filePath string) error {
 func (p *Publisher) randomString(length int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz"
 	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	
+
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = letters[rnd.Intn(len(letters))]

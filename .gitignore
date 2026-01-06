@@ -49,3 +49,7 @@ origi.html
 # OS files
 .DS_Store
 Thumbs.db
+
+blog/
+
+config/config.yaml
