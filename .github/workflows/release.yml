@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Build binary
+        run: |
+          mkdir -p build
+          # Windows
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o build/auto-wx-post-windows-amd64.exe main.go
+          # Linux
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o build/auto-wx-post-linux-amd64 main.go
+          # macOS (Intel)
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o build/auto-wx-post-darwin-amd64 main.go
+          # macOS (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o build/auto-wx-post-darwin-arm64 main.go
+
+      - name: Compress binaries
+        run: |
+          cd build
+          zip auto-wx-post-windows-amd64.zip auto-wx-post-windows-amd64.exe
+          tar -czvf auto-wx-post-linux-amd64.tar.gz auto-wx-post-linux-amd64
+          tar -czvf auto-wx-post-darwin-amd64.tar.gz auto-wx-post-darwin-amd64
+          tar -czvf auto-wx-post-darwin-arm64.tar.gz auto-wx-post-darwin-arm64
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            build/*.zip
+            build/*.tar.gz
+          generate_release_notes: true
