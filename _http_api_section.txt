@@ -1,0 +1,69 @@
+## 🌐 HTTP API 使用指南
+
+### 什么是 HTTP API？
+
+HTTP API 提供标准的 RESTful 接口，允许任何支持 HTTP 的系统调用本工具的功能。
+
+**适用场景：**
+- Web 应用集成
+- 自动化脚本
+- 第三方系统对接
+- 微服务架构
+
+### 快速开始
+
+```bash
+# 启动 HTTP API 服务器
+./auto-wx-post -http -port=8080 -api-key=your_secret_key
+
+# 使用 Makefile
+make run-http              # 无认证
+make run-http-auth         # 带认证
+```
+
+### API 端点
+
+| 方法 | 端点 | 描述 |
+|------|------|------|
+| GET | `/health` | 健康检查 |
+| POST | `/api/articles/list` | 列出文章 |
+| POST | `/api/articles/parse` | 解析文章 |
+| POST | `/api/articles/publish` | 发布文章 |
+| POST | `/api/images/upload` | 上传图片 |
+| GET | `/api/cache/status` | 缓存状态 |
+| POST | `/api/cache/clear` | 清空缓存 |
+
+### 使用示例
+
+**Python:**
+```python
+import requests
+
+API_BASE = "http://localhost:8080"
+headers = {"Authorization": "Bearer your_secret_key"}
+
+# 列出文章
+response = requests.post(f"{API_BASE}/api/articles/list", 
+    headers=headers, json={"show_published": False})
+print(response.json())
+
+# 发布文章
+response = requests.post(f"{API_BASE}/api/articles/publish",
+    headers=headers, json={"file_path": "path/to/article.md"})
+```
+
+**cURL:**
+```bash
+# 健康检查
+curl http://localhost:8080/health
+
+# 列出文章
+curl -X POST http://localhost:8080/api/articles/list \
+  -H "Authorization: Bearer your_secret_key" \
+  -H "Content-Type: application/json" \
+  -d '{"show_published": false}'
+```
+
+详细文档请查看：**[HTTP_API.md](HTTP_API.md)**
+
+---
