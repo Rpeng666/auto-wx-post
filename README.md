@@ -1,6 +1,6 @@
 # 微信公众号自动发布工具 (Go版)
 
-这是一个用Go语言写的微信公众号文章自动发布工具，
+这是一个用Go语言写的微信公众号文章自动发布工具， 支持手动命令行上传，也支持MCP提供给LLM使用
 
 吐槽：Fuck weixin！发布工具这么不好用，就那封闭的公众号生态怎么好得起来？
 
@@ -46,6 +46,10 @@ auto-wx-post/
 │   │   └── beautifier.go     # HTML美化
 │   ├── publisher/            # 发布器
 │   │   └── publisher.go
+│   ├── mcp/                  # MCP服务器
+│   │   ├── types.go          # 协议类型定义
+│   │   ├── server.go         # 服务器实现
+│   │   └── handler.go        # stdio处理器
 │   └── logger/               # 日志
 │       └── logger.go
 └── assets/                    # CSS模板 (可选)
@@ -97,6 +101,37 @@ go run main.go -dry-run
 
 # 清空缓存
 go run main.go -clear-cache
+
+# 🆕 运行 MCP 服务器 (用于 AI 助手集成)
+go run main.go -mcp
+```
+
+### 使用 Makefile（推荐）
+
+```bash
+# 构建项目
+make build
+
+# 运行项目
+make run
+
+# 模拟运行
+make run-dry
+
+# 运行 MCP 服务器
+make run-mcp
+
+# 清空缓存
+make clear-cache
+
+# 运行测试
+make test
+
+# 代码格式化
+make fmt
+
+# 查看所有命令
+make help
 ```
 
 ### 5. 编译
@@ -180,6 +215,111 @@ log:
 - 支持JSON/Text格式
 - 可配置日志级别
 - 支持文件和控制台输出
+
+### 7. 🆕 MCP 服务器 (AI 助手集成)
+- 实现 Model Context Protocol 规范
+- 支持 Claude Desktop 等 AI 助手调用
+- 提供 6 个实用工具：
+  - **list_articles** - 列出待发布文章
+  - **parse_article** - 解析文章元数据
+  - **upload_image** - 上传图片到微信
+  - **publish_article** - 发布文章到草稿箱
+  - **get_cache_status** - 查看缓存状态
+  - **clear_cache** - 清空缓存
+
+## 🤖 MCP 服务器使用指南
+
+### 什么是 MCP？
+
+MCP (Model Context Protocol) 是 Anthropic 推出的开放协议，允许 AI 助手（如 Claude）连接到外部工具和数据源。通过 MCP，你可以让 AI 助手帮你管理微信公众号文章。
+
+### 快速开始
+
+#### 1. 启动 MCP 服务器
+
+```bash
+# 方式 1: 使用 Makefile
+make run-mcp
+
+# 方式 2: 直接运行
+./auto-wx-post -mcp
+
+# 方式 3: 使用 go run
+go run main.go -mcp
+```
+
+#### 2. 配置 Claude Desktop
+
+编辑 Claude Desktop 配置文件：
+
+**macOS/Linux:**  
+`~/Library/Application Support/Claude/claude_desktop_config.json`
+
+**Windows:**  
+`%APPDATA%\Claude\claude_desktop_config.json`
+
+添加以下配置：
+
+```json
+{
+  "mcpServers": {
+    "auto-wx-post": {
+      "command": "/path/to/auto-wx-post",
+      "args": ["-mcp"],
+      "env": {
+        "WECHAT_APP_ID": "your_app_id_here",
+        "WECHAT_APP_SECRET": "your_app_secret_here"
+      }
+    }
+  }
+}
+```
+
+#### 3. 使用 AI 助手管理文章
+
+配置完成后，重启 Claude Desktop，然后你就可以：
+
+**列出文章：**
+```
+列出从 2024-01-01 到现在所有未发布的文章
+```
+
+**解析文章：**
+```
+帮我解析 blog-source/source/_posts/my-article.md 这篇文章
+```
+
+**上传图片：**
+```
+把 /path/to/image.jpg 上传到微信公众号
+```
+
+**发布文章：**
+```
+发布文章 blog-source/source/_posts/new-post.md 到微信公众号
+```
+
+**查看状态：**
+```
+显示缓存状态
+```
+
+### MCP 工具详情
+
+| 工具名称 | 描述 | 参数 |
+|---------|------|------|
+| `list_articles` | 列出指定日期范围的文章 | `start_date`, `end_date`, `show_published` |
+| `parse_article` | 解析 Markdown 文章 | `file_path` (必需) |
+| `upload_image` | 上传图片到微信 | `image_path` (必需) |
+| `publish_article` | 发布文章到草稿箱 | `file_path` (必需), `force` |
+| `get_cache_status` | 查看缓存状态 | 无 |
+| `clear_cache` | 清空缓存 | 无 |
+
+详细文档请查看：
+- [MCP_README.md](MCP_README.md) - 英文文档
+- [MCP_使用指南.md](MCP_使用指南.md) - 中文详细指南
+
+
 
 
 ## 🔧 开发指南
