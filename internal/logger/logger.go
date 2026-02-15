@@ -38,7 +38,7 @@ func NewLogger(cfg *config.LogConfig) (*Logger, error) {
 		if err := os.MkdirAll(logDir, 0755); err != nil {
 			return nil, err
 		}
-		
+
 		file, err := os.OpenFile(cfg.FilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			return nil, err

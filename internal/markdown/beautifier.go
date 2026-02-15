@@ -33,22 +33,22 @@ func NewBeautifier(templateDir string) (*Beautifier, error) {
 func (b *Beautifier) Beautify(htmlContent string) (string, error) {
 	// 包装段落
 	htmlContent = b.replaceParagraphs(htmlContent)
-	
+
 	// 格式化标题
 	htmlContent = b.replaceHeaders(htmlContent)
-	
+
 	// 转换链接为脚注
 	htmlContent = b.replaceLinks(htmlContent)
-	
+
 	// 格式化图片
 	htmlContent = b.formatImages(htmlContent)
-	
+
 	// 其他格式修复
 	htmlContent = b.formatFix(htmlContent)
-	
+
 	// 添加头部和尾部
 	htmlContent = b.wrapWithTemplate(htmlContent)
-	
+
 	return htmlContent, nil
 }
 
@@ -69,22 +69,22 @@ func (b *Beautifier) replaceHeaders(content string) string {
 		if len(matches) < 4 {
 			return match
 		}
-		
+
 		level := matches[1]
 		text := matches[2]
-		
+
 		// 计算字体大小
 		fontSize := 18
 		if l := level[0] - '0'; l >= 1 && l <= 6 {
 			fontSize = 18 + (4-int(l))*2
 		}
-		
+
 		template := b.getTemplate("sub")
 		if template == "" {
 			return fmt.Sprintf(`<h%s style="font-size: %dpx; font-weight: bold; margin: 20px 0 10px;">%s</h%s>`,
 				level, fontSize, text, level)
 		}
-		
+
 		return fmt.Sprintf(template, level, fontSize, text, level)
 	})
 }
@@ -151,9 +151,9 @@ func (b *Beautifier) formatImages(content string) string {
 	doc.Find("img").Each(func(i int, s *goquery.Selection) {
 		alt, _ := s.Attr("alt")
 		src, _ := s.Attr("src")
-		
+
 		oldImg := fmt.Sprintf(`<img alt="%s" src="%s" />`, alt, src)
-		
+
 		figureTemplate := b.getTemplate("figure")
 		if figureTemplate == "" {
 			figureTemplate = `<figure style="text-align: center; margin: 20px 0;">
@@ -161,7 +161,7 @@ func (b *Beautifier) formatImages(content string) string {
 				<figcaption style="margin-top: 10px; color: #666; font-size: 14px;">%s</figcaption>
 			</figure>`
 		}
-		
+
 		newImg := fmt.Sprintf(figureTemplate, alt, src, alt)
 		content = strings.ReplaceAll(content, oldImg, newImg)
 	})
@@ -173,19 +173,19 @@ func (b *Beautifier) formatImages(content string) string {
 func (b *Beautifier) formatFix(content string) string {
 	// 列表项之间添加间距
 	content = strings.ReplaceAll(content, "</li>", "</li>\n<p></p>")
-	
+
 	// 代码块样式
 	codeStyle := b.getTemplate("code")
 	if codeStyle == "" {
 		codeStyle = `background: #272822; padding: 15px; border-radius: 5px; overflow-x: auto;`
 	}
 	content = strings.ReplaceAll(content, `background: #272822`, codeStyle)
-	
+
 	// 预格式化文本样式
-	content = strings.ReplaceAll(content, 
+	content = strings.ReplaceAll(content,
 		`<pre style="line-height: 125%">`,
 		`<pre style="line-height: 125%; color: white; font-size: 11px; margin: 10px 0;">`)
-	
+
 	return content
 }
 
@@ -207,7 +207,7 @@ func (b *Beautifier) loadTemplates(templateDir string) error {
 	}
 
 	templates := []string{"para", "sub", "link", "ref_header", "ref_link", "figure", "code", "header"}
-	
+
 	for _, name := range templates {
 		path := filepath.Join(templateDir, name+".tmpl")
 		if fileExists(path) {

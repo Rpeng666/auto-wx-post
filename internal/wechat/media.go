@@ -117,7 +117,7 @@ func (c *Client) AddDraft(ctx context.Context, articles []Article) (string, erro
 	}
 
 	endpoint := "https://api.weixin.qq.com/cgi-bin/draft/add"
-	
+
 	var resp DraftResponse
 	if err := c.DoRequest(ctx, "POST", endpoint, bytes.NewReader(data), &resp); err != nil {
 		return "", err

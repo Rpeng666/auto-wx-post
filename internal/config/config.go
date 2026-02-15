@@ -38,9 +38,9 @@ type CacheConfig struct {
 
 // ImageConfig 图片配置
 type ImageConfig struct {
-	TempDir              string `yaml:"temp_dir"`
-	PlaceholderService   string `yaml:"placeholder_service"`
-	DefaultCoverSize     string `yaml:"default_cover_size"`
+	TempDir            string `yaml:"temp_dir"`
+	PlaceholderService string `yaml:"placeholder_service"`
+	DefaultCoverSize   string `yaml:"default_cover_size"`
 }
 
 // PublishConfig 发布配置

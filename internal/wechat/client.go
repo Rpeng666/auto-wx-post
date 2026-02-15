@@ -118,7 +118,7 @@ func (c *Client) refreshToken(ctx context.Context) (string, error) {
 // doRequestWithRetry 执行HTTP请求并支持重试
 func (c *Client) doRequestWithRetry(ctx context.Context, method, url string, body io.Reader, result interface{}) error {
 	var lastErr error
-	
+
 	for i := 0; i <= c.retryConfig.MaxRetries; i++ {
 		if i > 0 {
 			// 指数退避

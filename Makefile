@@ -56,6 +56,11 @@ run-dry:
 	@echo "运行项目（模拟模式）..."
 	go run $(MAIN_FILE) -dry-run
 
+# 运行 MCP 服务器
+run-mcp:
+	@echo "运行 MCP 服务器..."
+	go run $(MAIN_FILE) -mcp
+
 # 清空缓存
 clear-cache:
 	@echo "清空缓存..."
@@ -112,6 +117,7 @@ help:
 	@echo "  make build-all      - 构建所有平台版本"
 	@echo "  make run            - 运行项目"
 	@echo "  make run-dry        - 模拟运行"
+	@echo "  make run-mcp        - 运行 MCP 服务器"
 	@echo "  make clear-cache    - 清空缓存"
 	@echo "  make test           - 运行测试"
 	@echo "  make test-coverage  - 生成测试覆盖率"

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "auto-wx-post": {
+      "command": "auto-wx-post",
+      "args": ["-mcp"],
+      "env": {
+        "WECHAT_APP_ID": "your_app_id_here",
+        "WECHAT_APP_SECRET": "your_app_secret_here"
+      }
+    }
+  }
+}

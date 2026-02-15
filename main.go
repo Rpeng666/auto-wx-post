@@ -12,6 +12,7 @@ import (
 	"auto-wx-post/internal/cache"
 	"auto-wx-post/internal/config"
 	"auto-wx-post/internal/logger"
+	"auto-wx-post/internal/mcp"
 	"auto-wx-post/internal/media"
 	"auto-wx-post/internal/publisher"
 	"auto-wx-post/internal/wechat"
@@ -21,6 +22,7 @@ var (
 	configPath = flag.String("config", "config.yaml", "配置文件路径")
 	clearCache = flag.Bool("clear-cache", false, "清空缓存")
 	dryRun     = flag.Bool("dry-run", false, "模拟运行(不实际发布)")
+	mcpServer  = flag.Bool("mcp", false, "启动 MCP (Model Context Protocol) 服务器")
 )
 
 func main() {
@@ -84,9 +86,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	// MCP 服务器模式
+	if *mcpServer {
+		log.Info("启动 MCP 服务器模式")
+		mcpSrv := mcp.NewServer(cfg, wechatClient, cacheManager, mediaManager, pub, log)
+		handler := mcp.NewHandler(mcpSrv)
+
+		ctx := context.Background()
+		if err := handler.Run(ctx); err != nil {
+			log.Error("MCP 服务器错误", "error", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	// 扫描并发布文章
 	ctx := context.Background()
-	
+
 	// 计算日期范围
 	now := time.Now()
 	startDate := now.AddDate(0, 0, -cfg.Publish.DaysBefore)
@@ -103,7 +119,7 @@ func main() {
 
 	for d := startDate; !d.After(endDate); d = d.AddDate(0, 0, 1) {
 		dateStr := d.Format("2006-01-02")
-		
+
 		// 查找匹配日期的文章
 		articles, err := findArticlesByDate(cfg.Blog.SourcePath, dateStr)
 		if err != nil {
