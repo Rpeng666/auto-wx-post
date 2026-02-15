@@ -1,6 +1,10 @@
 # 微信公众号自动发布工具 (Go版)
 
-这是一个用Go语言写的微信公众号文章自动发布工具， 支持手动命令行上传，也支持MCP提供给LLM使用
+这是一个用Go语言编写的微信公众号文章自动发布工具，支持三种使用方式：
+
+- 📝 **命令行模式**: 批量扫描和发布文章
+- 🤖 **MCP 服务器**: 通过 AI 助手（如 Claude Desktop）集成
+- 🌐 **HTTP API**: 提供 RESTful API 供外部系统调用
 
 吐槽：Fuck weixin！发布工具这么不好用，就那封闭的公众号生态怎么好得起来？
 
@@ -50,6 +54,8 @@ auto-wx-post/
 │   │   ├── types.go          # 协议类型定义
 │   │   ├── server.go         # 服务器实现
 │   │   └── handler.go        # stdio处理器
+│   ├── api/                  # HTTP API服务器
+│   │   └── server.go         # RESTful API实现
 │   └── logger/               # 日志
 │       └── logger.go
 └── assets/                    # CSS模板 (可选)
@@ -89,8 +95,10 @@ export WECHAT_APP_SECRET=your_app_secret
 
 ### 4. 运行程序
 
+#### 命令行模式
+
 ```bash
-# 正常运行
+# 正常运行（批量发布）
 go run main.go
 
 # 使用自定义配置文件
@@ -101,9 +109,57 @@ go run main.go -dry-run
 
 # 清空缓存
 go run main.go -clear-cache
+```
 
-# 🆕 运行 MCP 服务器 (用于 AI 助手集成)
+#### MCP 服务器模式（AI 助手集成）
+
+```bash
+# 启动 MCP 服务器（用于 Claude Desktop 等）
 go run main.go -mcp
+```
+
+#### HTTP API 服务器模式（外部调用）
+
+```bash
+# 启动 HTTP API（默认端口 8080，无认证）
+go run main.go -http
+
+# 指定端口
+go run main.go -http -port=3000
+
+# 启用 API 认证
+go run main.go -http -api-key=your_secret_key
+
+# 完整示例
+go run main.go -http -port=8080 -api-key=my-secret-123
+```
+
+### 使用 Makefile（推荐）
+
+```bash
+# 构建项目
+make build
+
+# 运行项目
+make run
+
+# 模拟运行
+make run-dry
+
+# 运行 MCP 服务器
+make run-mcp
+
+# 运行 HTTP API 服务器
+make run-http
+
+# 运行 HTTP API（带认证）
+make run-http-auth
+
+# 清空缓存
+make clear-cache
+
+# 查看所有命令
+make help
 ```
 
 ### 使用 Makefile（推荐）
@@ -226,6 +282,19 @@ log:
   - **publish_article** - 发布文章到草稿箱
   - **get_cache_status** - 查看缓存状态
   - **clear_cache** - 清空缓存
+
+### 8. 🆕 HTTP API (外部系统集成)
+- RESTful API 接口
+- 支持 API Key 认证
+- CORS 跨域支持
+- 提供 7 个端点：
+  - `GET /health` - 健康检查
+  - `POST /api/articles/list` - 列出文章
+  - `POST /api/articles/parse` - 解析文章
+  - `POST /api/articles/publish` - 发布文章
+  - `POST /api/images/upload` - 上传图片
+  - `GET /api/cache/status` - 缓存状态
+  - `POST /api/cache/clear` - 清空缓存
 
 ## 🤖 MCP 服务器使用指南
 

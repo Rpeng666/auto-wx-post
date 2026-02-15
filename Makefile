@@ -61,6 +61,16 @@ run-mcp:
 	@echo "运行 MCP 服务器..."
 	go run $(MAIN_FILE) -mcp
 
+# 运行 HTTP API 服务器
+run-http:
+	@echo "运行 HTTP API 服务器..."
+	go run $(MAIN_FILE) -http -port=8080
+
+# 运行 HTTP API 服务器（带认证）
+run-http-auth:
+	@echo "运行 HTTP API 服务器（带认证）..."
+	go run $(MAIN_FILE) -http -port=8080 -api-key=dev-secret-key
+
 # 清空缓存
 clear-cache:
 	@echo "清空缓存..."

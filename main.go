@@ -4,11 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"auto-wx-post/internal/api"
 	"auto-wx-post/internal/cache"
 	"auto-wx-post/internal/config"
 	"auto-wx-post/internal/logger"
@@ -23,6 +25,9 @@ var (
 	clearCache = flag.Bool("clear-cache", false, "清空缓存")
 	dryRun     = flag.Bool("dry-run", false, "模拟运行(不实际发布)")
 	mcpServer  = flag.Bool("mcp", false, "启动 MCP (Model Context Protocol) 服务器")
+	httpServer = flag.Bool("http", false, "启动 HTTP API 服务器")
+	httpPort   = flag.String("port", "8080", "HTTP 服务器端口")
+	apiKey     = flag.String("api-key", "", "API 认证密钥 (留空则不启用认证)")
 )
 
 func main() {
@@ -95,6 +100,28 @@ func main() {
 		ctx := context.Background()
 		if err := handler.Run(ctx); err != nil {
 			log.Error("MCP 服务器错误", "error", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	// HTTP API 服务器模式
+	if *httpServer {
+		log.Info("启动 HTTP API 服务器", "port", *httpPort)
+
+		apiSrv := api.NewServer(cfg, wechatClient, cacheManager, mediaManager, pub, log, *apiKey)
+		handler := apiSrv.SetupRoutes()
+
+		addr := ":" + *httpPort
+		log.Info("HTTP API 服务器启动", "address", addr)
+		if *apiKey != "" {
+			log.Info("API 认证已启用")
+		} else {
+			log.Warn("API 认证未启用，建议使用 -api-key 参数设置密钥")
+		}
+
+		if err := http.ListenAndServe(addr, handler); err != nil {
+			log.Error("HTTP 服务器错误", "error", err)
 			os.Exit(1)
 		}
 		return
